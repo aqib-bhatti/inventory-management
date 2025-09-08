@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { collections } from '../db.js';
-
+import { checkAndAlertLowStock } from '../utils/checkLowStock.js';
 
 
 export const stockOut = async (req, res) => {
@@ -42,6 +42,8 @@ export const stockOut = async (req, res) => {
       salesmanName,
       soldAt: new Date(),
     });
+
+    await checkAndAlertLowStock();
 
     res.json({ success: true, message: 'Sale recorded successfully' });
   } catch (err) {
@@ -370,7 +372,6 @@ export const saveMonthlySalesData = async () => {
             soldAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
           },
         },
-
         {
           $group: {
             _id: null,
@@ -389,18 +390,30 @@ export const saveMonthlySalesData = async () => {
       const { totalSales, totalProfit } = salesData[0];
       const monthName = monthNames[lastMonthStart.getMonth()];
 
-      const newDoc = {
+      // ✅ Woh document jise hum dhoondh rahe hain (pichle mahine ka)
+      const filter = {
         type: 'monthly_summary',
         month: monthName,
         year: lastMonthStart.getFullYear(),
-        totalSales: totalSales,
-        totalProfit: totalProfit,
-        createdAt: new Date(),
       };
 
-      await collections.profitGraph().insertOne(newDoc);
-      console.log(`Monthly sales and profit data for ${monthName} saved to profitGraph.`);
-      return { success: true, data: newDoc };
+      // ✅ Woh data jise hum update karna chahte hain
+      const updateDoc = {
+        $set: {
+          totalSales: totalSales,
+          totalProfit: totalProfit,
+          updatedAt: new Date(), // ✅ Update time
+        },
+        $setOnInsert: {
+          createdAt: new Date(), // ✅ Naya document create hone par
+        },
+      };
+
+      // ✅ updateOne ka istemal karein, upsert: true ke saath
+      await collections.profitGraph().updateOne(filter, updateDoc, { upsert: true });
+
+      console.log(`Monthly sales and profit data for ${monthName} saved/updated in profitGraph.`);
+      return { success: true, message: 'Monthly data saved/updated.' };
     } else {
       console.log('No sales data found for the last month.');
       return { success: false, message: 'No data found.' };

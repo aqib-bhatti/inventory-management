@@ -310,6 +310,7 @@ export const LogoutButton2 = styled.button`
 // src/global/SidebarStyle.js
 
 export const Sidebar = styled.aside`
+  margin:0;
   display: flex;
   flex-direction: column;
   width: 180px;
@@ -365,7 +366,8 @@ export const LogoutButton = styled.button`
 `;
 
 export const DashboardContainerFlex = styled.div`
-  display: flex; /* This is the key change */
+  margin :0;
+  display: flex; 
   height: 95vh;
   width: 100%;
   background-color: #f4f7f9;

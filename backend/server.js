@@ -1,5 +1,5 @@
 import express from "express";
-import { connectDB,collections } from "./db.js";
+import { connectDB } from "./db.js";
 import dotenv from "dotenv";
 import inventoryRouters from "./routers/inventoryRouters.js";
 import userRouters from "./routers/userRouter.js";
@@ -26,7 +26,7 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    // saveMonthlySalesData();
+    saveMonthlySalesData();
 
     app.use("/inventory", inventoryRouters);
     app.use("/auth", userRouters);

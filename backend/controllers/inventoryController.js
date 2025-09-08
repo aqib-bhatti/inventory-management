@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { collections } from "../db.js";
+import { checkAndAlertLowStock } from "../utils/checkLowStock.js";
 // import { saveFruitStockReport } from "./stockController.js";
 export const addInventory = async (req, res) => {
   try {
@@ -62,6 +63,8 @@ export const addInventory = async (req, res) => {
       stockInDate: new Date(),
       createdAt: new Date(),
     });
+
+    await checkAndAlertLowStock();
 
     res
       .status(201)

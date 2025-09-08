@@ -14,8 +14,6 @@ export const authMiddleware = (req, res, next) => {
   }
 };
 
-//role middleware
-
 export const roleMiddleware = (allowedRoles) => {
   return (req, res, next) => {
     if (!allowedRoles.includes(req.user.role)) {
@@ -24,3 +22,5 @@ export const roleMiddleware = (allowedRoles) => {
     next();
   };
 };
+
+

@@ -144,3 +144,45 @@ export const ChartContainer = styled.div`
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
+
+
+
+
+
+
+export const ChartContainer2 = styled.div`
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 20px auto;
+`;
+
+export const ChartTitle = styled.h3`
+  text-align: center;
+  margin-bottom: 20px; 
+`;
+
+export const ChartSubtitle = styled.p`
+  text-align: center;
+  color: #666;
+  margin-top: 0; 
+`;
+
+export const CardSummery = styled.div`
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: transform 0.3s ease-in-out;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+`;

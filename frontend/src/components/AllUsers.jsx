@@ -76,7 +76,7 @@ function DashboardPage() {
       <section style={{ marginBottom: "2rem" }}>
         <h2>My Profile</h2>
         {userProfile && (
-          <div>
+          <div style={{ paddingLeft:"2rem", gap:"12rem",display:"flex" }}>
             <p>
               <strong>Name:</strong> {userProfile.name}
             </p>

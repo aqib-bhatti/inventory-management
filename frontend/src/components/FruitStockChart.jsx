@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getSummery } from '../services/stockServices'; // Ensure this path is correct
+import { getSummery } from '../services/stockServices'; 
+import { ChartContainer2, ChartTitle, ChartSubtitle } from '../global/Summery'; 
 
 const COLORS = ['#FF4500', '#00C49F', '#FFBB28', '#A234A2', '#0088FE', '#FF8042', '#2ECC40'];
 
@@ -47,9 +48,9 @@ const FruitStockChart = () => {
   }
 
   return (
-    <div style={{ padding: '20px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
-      <h3 style={{ textAlign: 'center' }}>Stock by Fruit</h3>
-      <p style={{ textAlign: 'center', color: '#666' }}>Distribution of inventory across fruit categories</p>
+     <ChartContainer2>
+      <ChartTitle>Stock by Fruit</ChartTitle>
+      <ChartSubtitle>Distribution of inventory across fruit categories</ChartSubtitle>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#8884d8" paddingAngle={0} dataKey="value">
@@ -66,7 +67,7 @@ const FruitStockChart = () => {
           <Legend layout="vertical" verticalAlign="middle" align="right" />
         </PieChart>
       </ResponsiveContainer>
-    </div>
+    </ChartContainer2>
   );
 };
 
