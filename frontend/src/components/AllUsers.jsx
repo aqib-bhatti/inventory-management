@@ -11,6 +11,7 @@ import {
   Container,
   ActionButton,
 } from "../global/Style";
+import Loader from "./Loader";
 
 function DashboardPage() {
   const [userProfile, setUserProfile] = useState(null);
@@ -51,11 +52,7 @@ function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <ContentContainerFlex style={{ justifyContent: "center" }}>
-        <p>Loading user data...</p>
-      </ContentContainerFlex>
-    );
+    return <Loader/>
   }
 
   if (error) {

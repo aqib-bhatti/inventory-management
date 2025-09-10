@@ -1,49 +1,32 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  getSummery,
-  getReports,
-  makeSale,
-  salesmanLogs,
-} from "../services/stockServices";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { getSummery, getReports, makeSale, salesmanLogs } from '../services/stockServices';
 
 // Stock summary
-export const fetchStockSummary = createAsyncThunk(
-  "stock/fetchSummary",
-  async () => await getSummery()
-);
+export const fetchStockSummary = createAsyncThunk('stock/fetchSummary', async () => await getSummery());
 
 // Reports (daily/monthly/yearly)
-export const fetchReports = createAsyncThunk(
-  "stock/fetchReports",
-  async (type) => {
-    const res = await getReports(type);
-    return { type, data: res };
-  }
-);
+export const fetchReports = createAsyncThunk('stock/fetchReports', async (type) => {
+  const res = await getReports(type);
+  return { type, data: res };
+});
 
 // Salesman logs
-export const fetchSalesmanLogs = createAsyncThunk(
-  "stock/fetchSalesmanLogs",
-  async (type) => {
-    const res = await salesmanLogs(type);
-    return { type, data: res };
-  }
-);
+export const fetchSalesmanLogs = createAsyncThunk('stock/fetchSalesmanLogs', async (type) => {
+  const res = await salesmanLogs(type);
+  return { type, data: res };
+});
 
 // Make a sale
-export const createSale = createAsyncThunk(
-  "stock/createSale",
-  async (data, { rejectWithValue }) => {
-    try {
-      return await makeSale(data);
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Sale failed");
-    }
+export const createSale = createAsyncThunk('stock/createSale', async (data, { rejectWithValue }) => {
+  try {
+    return await makeSale(data);
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Sale failed');
   }
-);
+});
 
 const stockSlice = createSlice({
-  name: "stock",
+  name: 'stock',
   initialState: {
     summary: null,
     reports: { daily: null, monthly: null, yearly: null },

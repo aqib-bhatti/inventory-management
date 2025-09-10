@@ -25,7 +25,7 @@ function Dashboard() {
 
   useEffect(() => {
     if (!user || (user.role !== "manager" && user.role !== "admin")) {
-      navigate("/login");
+      navigate("/");
     }
   }, [user, navigate]);
 
@@ -48,7 +48,7 @@ function Dashboard() {
           Summary
         </SidebarMenuItem>
 
-        {/* This condition is correct for the manager-only tab */}
+        
         {user.role === "manager" && (
           <SidebarMenuItem
             $active={activeTab === "inventory"}

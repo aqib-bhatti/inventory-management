@@ -43,7 +43,7 @@ export const signup = async (req, res) => {
       message: 'account is registered',
     });
   } catch (err) {
-    console.error('Signup Error:', err); // console pe full object
+    console.error('Signup Error:', err); 
     res.status(500).json({
       success: false,
       error: err.message || JSON.stringify(err) || 'Internal Server Error',
@@ -60,21 +60,23 @@ export const login = async (req, res) => {
 
     const user = await collections.user().findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: 'Invalid email or password' });
+      return res.status(400).json({ error: "Invalid email or password" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid email or password' });
+      return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    // 👇 JWT ke payload me user-agent include karo
+    const payload = {
+      id: user._id,
+      role: user.role,
+      ua: req.headers["user-agent"], 
+    };
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 24 * 60 * 60 * 1000,
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "1d",
     });
 
     res.json({
@@ -87,6 +89,23 @@ export const login = async (req, res) => {
         role: user.role,
       },
     });
+
+//     res.cookie("token", token, {
+//   httpOnly: true,
+//   secure: false,  
+//   sameSite: "Lax",
+//   maxAge: 24 * 60 * 60 * 1000, // 1 day
+// });
+
+// res.json({
+//   success: true,
+//   user: {
+//     id: user._id,
+//     name: user.name,
+//     email: user.email,
+//     role: user.role,
+//   },
+// });
   } catch (err) {
     if (err.errors) {
       return res.status(400).json({ success: false, errors: err.errors });
@@ -94,6 +113,8 @@ export const login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
 
 export const getProfile = async (req, res) => {
   try {

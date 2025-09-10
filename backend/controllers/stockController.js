@@ -2,7 +2,6 @@ import { ObjectId } from 'mongodb';
 import { collections } from '../db.js';
 import { checkAndAlertLowStock } from '../utils/checkLowStock.js';
 
-
 export const stockOut = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
@@ -50,8 +49,6 @@ export const stockOut = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
 
 export const getStockLogs = async (req, res) => {
   try {
@@ -165,6 +162,7 @@ export const getStockSummary = async (req, res) => {
     const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
     const endOfYear = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
 
+    // Existing stock calculations
     const [dailyOut, monthlyOut, yearlyOut] = await Promise.all([
       collections
         .stockLogs()
@@ -204,16 +202,31 @@ export const getStockSummary = async (req, res) => {
         .toArray(),
     ]);
 
+    // ✅ Naya code jo monthly profit calculate karega
+    const monthlyProfitData = await collections
+      .stockLogs()
+      .aggregate([
+        { $match: { soldAt: { $gte: new Date(now.getFullYear(), now.getMonth() - 11, 1) } } },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$soldAt' },
+              month: { $month: '$soldAt' },
+            },
+            totalProfit: { $sum: { $toDouble: '$profit' } },
+          },
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+      ])
+      .toArray();
+
     const inventory = await collections.inventory().find().toArray();
-
     const totalProducts = inventory.length;
-
     const remainingstock = inventory.reduce((acc, item) => acc + Number(item.quantity || 0), 0);
-
     const totalValue = inventory.reduce((acc, item) => acc + Number(item.quantity || 0) * Number(item.purchasePrice || 0), 0);
-
     const lowStockItems = inventory.filter((item) => Number(item.quantity || 0) <= 5);
 
+    // Existing item summaries
     const itemSummaries = await Promise.all(
       inventory.map(async (item) => {
         const [dailyInItem, monthlyInItem, yearlyInItem] = await Promise.all([
@@ -307,14 +320,14 @@ export const getStockSummary = async (req, res) => {
               },
             ])
             .toArray(),
-        ]); // Calculate percentage for each item
+        ]);
 
         const percentage = remainingstock > 0 ? (Number(item.quantity) / remainingstock) * 100 : 0;
         return {
           itemId: item._id,
           name: item.name,
           remaining: item.quantity || 0,
-          percentage: parseFloat(percentage.toFixed(2)), 
+          percentage: parseFloat(percentage.toFixed(2)),
           unit: item.unit || 0,
           purchasePrice: item.purchasePrice || 0,
           salePrice: item.salePrice || 0,
@@ -349,88 +362,14 @@ export const getStockSummary = async (req, res) => {
       totalProducts,
       totalValue: totalValue.toFixed(2),
       lowStockItems: lowStockItems.length,
+      // ✅ Naya data jise aap chart mein use kar sakte hain
+      monthlyProfitData: monthlyProfitData.map((data) => ({
+        month: `${data._id.month}-${data._id.year}`,
+        profit: parseFloat(data.totalProfit.toFixed(2)),
+      })),
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-export const saveMonthlySalesData = async () => {
-  try {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const today = new Date();
-
-    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
-
-    const salesData = await collections
-      .stockLogs()
-      .aggregate([
-        {
-          $match: {
-            soldAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            totalSales: {
-              $sum: { $multiply: [{ $toDouble: '$quantity' }, { $toDouble: '$salePrice' }] },
-            },
-            totalProfit: {
-              $sum: { $toDouble: '$profit' },
-            },
-          },
-        },
-      ])
-      .toArray();
-
-    if (salesData.length > 0) {
-      const { totalSales, totalProfit } = salesData[0];
-      const monthName = monthNames[lastMonthStart.getMonth()];
-
-      // ✅ Woh document jise hum dhoondh rahe hain (pichle mahine ka)
-      const filter = {
-        type: 'monthly_summary',
-        month: monthName,
-        year: lastMonthStart.getFullYear(),
-      };
-
-      // ✅ Woh data jise hum update karna chahte hain
-      const updateDoc = {
-        $set: {
-          totalSales: totalSales,
-          totalProfit: totalProfit,
-          updatedAt: new Date(), // ✅ Update time
-        },
-        $setOnInsert: {
-          createdAt: new Date(), // ✅ Naya document create hone par
-        },
-      };
-
-      // ✅ updateOne ka istemal karein, upsert: true ke saath
-      await collections.profitGraph().updateOne(filter, updateDoc, { upsert: true });
-
-      console.log(`Monthly sales and profit data for ${monthName} saved/updated in profitGraph.`);
-      return { success: true, message: 'Monthly data saved/updated.' };
-    } else {
-      console.log('No sales data found for the last month.');
-      return { success: false, message: 'No data found.' };
-    }
-  } catch (error) {
-    console.error('Error saving monthly sales data:', error);
-    return { success: false, message: error.message };
-  }
-};
-
-export const getProfitGraphData = async (req, res) => {
-  try {
-    const data = await collections.profitGraph().find({ type: 'monthly_summary' }).sort({ year: 1, month: 1 }).toArray();
-
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching profit graph data:', error);
-    res.status(500).json({ success: false, message: error.message });
   }
 };

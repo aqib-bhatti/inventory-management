@@ -1,0 +1,5 @@
+1- Write proper schemas
+2- use runtime calculations for graphs
+3- seperate all routes based on the actions (user, auth, )
+4- use middleware to get user details as soon as they get validated
+5- secure token usage and check for proper security

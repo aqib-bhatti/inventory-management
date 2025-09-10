@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getSummery } from '../services/stockServices'; 
 import { ChartContainer2, ChartTitle, ChartSubtitle } from '../global/Summery'; 
+import Loader from './Loader';
 
 const COLORS = ['#FF4500', '#00C49F', '#FFBB28', '#A234A2', '#0088FE', '#FF8042', '#2ECC40'];
 
@@ -36,7 +37,8 @@ const FruitStockChart = () => {
   }, []);
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '20px' }}>Loading chart...</div>;
+    // return <div style={{ textAlign: 'center', padding: '20px' }}>Loading chart...</div>;
+      return <Loader/>
   }
 
   if (error) {

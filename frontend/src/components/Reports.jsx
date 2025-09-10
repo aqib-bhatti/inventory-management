@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Container, Th, Td, Table, ButtonGroup, ProfitBox, LoadingText, Title, Button } from '../global/Style';
 import { fetchReports } from '../slices/stockSlice';
+import Loader from './Loader';
 export default function Reports() {
   const [range, setRange] = useState('daily');
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ export default function Reports() {
       </ButtonGroup>
 
       {/* Loading */}
-      {loading && <LoadingText>Loading reports...</LoadingText>}
+      {loading && <Loader/>}
 
       {/* Data */}
       {data && (

@@ -1,14 +1,10 @@
 import express from 'express';
-import {
-  stockOut,
-  getStockLogs,
-  getReports,
-  getStockSummary,
-  getProfitGraphData,
-  // getFruitStockReports
-} from '../controllers/stockController.js';
 
-import { authMiddleware , roleMiddleware} from '../middlewares/authMiddleware.js';
+import { stockOut, getStockLogs, getReports, getStockSummary } from '../controllers/stockController.js';
+
+import { authMiddleware } from '../middlewares/authMiddleware.js';
+
+import { roleMiddleware } from '../middlewares/roleMiddleware.js';
 
 const router = express.Router();
 
@@ -19,7 +15,7 @@ router.get('/logs', authMiddleware, getStockLogs);
 router.get('/reports', authMiddleware, roleMiddleware(['admin', 'manager']), getReports);
 
 router.get('/summery', authMiddleware, roleMiddleware(['admin', 'manager']), getStockSummary);
-router.get('/profit-trends',authMiddleware,roleMiddleware(['admin','manager']), getProfitGraphData);
-// router.get('/inventory-report', getFruitStockReports);
+
+// router.get('/profit-trends', authMiddleware, roleMiddleware(['admin', 'manager']), getProfitGraphData);
 
 export default router;
