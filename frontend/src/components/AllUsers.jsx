@@ -1,17 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { getProfile, getAllUsers, deleteUser } from "../services/userServices";
-import {
-  Header,
-  ContentContainerFlex,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tdt,
-  Container,
-  ActionButton,
-} from "../global/Style";
-import Loader from "./Loader";
+import React, { useState, useEffect } from 'react';
+import { getProfile, getAllUsers, deleteUser } from '../services/userServices';
+import CreateEmployees from '../components/CreateEmployees'; // ✅ Correct import (Capital letter)
+
+import { Header, ContentContainerFlex, Table, Thead, Tr, Th, Tdt, Container, ActionButton } from '../global/Style';
 
 function DashboardPage() {
   const [userProfile, setUserProfile] = useState(null);
@@ -20,17 +11,17 @@ function DashboardPage() {
   const [error, setError] = useState(null);
   const [deleteMessage, setDeleteMessage] = useState(null);
 
+  // ✅ modal state
+  const [showForm, setShowForm] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profileData, allUsersData] = await Promise.all([
-          getProfile(),
-          getAllUsers(),
-        ]);
+        const [profileData, allUsersData] = await Promise.all([getProfile(), getAllUsers()]);
         setUserProfile(profileData.user);
         setAllUsers(allUsersData);
       } catch (err) {
-        setError(err.message || "Failed to load data.");
+        setError(err.message || 'Failed to load data.');
       } finally {
         setLoading(false);
       }
@@ -47,33 +38,41 @@ function DashboardPage() {
       setAllUsers(allUsers.filter((user) => user._id !== userId));
       setDeleteMessage(`User '${userName}' deleted successfully!`);
     } catch (err) {
-      setDeleteMessage(err.message || "Failed to delete user.");
+      setDeleteMessage(err.message || 'Failed to delete user.');
     }
   };
 
   if (loading) {
-    return <Loader/>
+    return (
+      <ContentContainerFlex style={{ justifyContent: 'center' }}>
+        <p>Loading user data...</p>
+      </ContentContainerFlex>
+    );
   }
 
   if (error) {
     return (
-      <ContentContainerFlex style={{ color: "red", justifyContent: "center" }}>
+      <ContentContainerFlex style={{ color: 'red', justifyContent: 'center' }}>
         <p>{error}</p>
       </ContentContainerFlex>
     );
   }
 
-  const canDelete = userProfile && userProfile.role === "admin";
+  const canDelete = userProfile && userProfile.role === 'admin';
 
   return (
     <Container>
-      <Header>User Dashboard</Header>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Header>User Dashboard</Header>
+
+        <ActionButton onClick={() => setShowForm(true)}>+ Add User</ActionButton>
+      </div>
 
       {/* Profile Section */}
-      <section style={{ marginBottom: "2rem" }}>
+      <section style={{ marginBottom: '2rem' }}>
         <h2>My Profile</h2>
         {userProfile && (
-          <div style={{ paddingLeft:"2rem", gap:"12rem",display:"flex" }}>
+          <div style={{ paddingLeft: '2rem', gap: '12rem', display: 'flex' }}>
             <p>
               <strong>Name:</strong> {userProfile.name}
             </p>
@@ -90,9 +89,7 @@ function DashboardPage() {
       {/* All Users Section */}
       <section>
         <h2>All Employees</h2>
-        {deleteMessage && (
-          <p style={{ color: "green", textAlign: "center" }}>{deleteMessage}</p>
-        )}
+        {deleteMessage && <p style={{ color: 'green', textAlign: 'center' }}>{deleteMessage}</p>}
         <Table>
           <Thead>
             <Tr>
@@ -111,11 +108,8 @@ function DashboardPage() {
 
                 {canDelete && (
                   <Tdt>
-                    {user.role !== "admin" && user._id !== userProfile._id && (
-                      <ActionButton
-                        danger
-                        onClick={() => handleDelete(user._id, user.name)}
-                      >
+                    {user.role !== 'admin' && user._id !== userProfile._id && (
+                      <ActionButton danger onClick={() => handleDelete(user._id, user.name)}>
                         Delete
                       </ActionButton>
                     )}
@@ -126,6 +120,8 @@ function DashboardPage() {
           </tbody>
         </Table>
       </section>
+
+      {showForm && <CreateEmployees onClose={() => setShowForm(false)} />}
     </Container>
   );
 }

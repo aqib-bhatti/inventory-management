@@ -162,7 +162,6 @@ export const getStockSummary = async (req, res) => {
     const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
     const endOfYear = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
 
-    // Existing stock calculations
     const [dailyOut, monthlyOut, yearlyOut] = await Promise.all([
       collections
         .stockLogs()
@@ -202,7 +201,6 @@ export const getStockSummary = async (req, res) => {
         .toArray(),
     ]);
 
-    // ✅ Naya code jo monthly profit calculate karega
     const monthlyProfitData = await collections
       .stockLogs()
       .aggregate([
@@ -226,7 +224,6 @@ export const getStockSummary = async (req, res) => {
     const totalValue = inventory.reduce((acc, item) => acc + Number(item.quantity || 0) * Number(item.purchasePrice || 0), 0);
     const lowStockItems = inventory.filter((item) => Number(item.quantity || 0) <= 5);
 
-    // Existing item summaries
     const itemSummaries = await Promise.all(
       inventory.map(async (item) => {
         const [dailyInItem, monthlyInItem, yearlyInItem] = await Promise.all([
@@ -362,7 +359,7 @@ export const getStockSummary = async (req, res) => {
       totalProducts,
       totalValue: totalValue.toFixed(2),
       lowStockItems: lowStockItems.length,
-      // ✅ Naya data jise aap chart mein use kar sakte hain
+
       monthlyProfitData: monthlyProfitData.map((data) => ({
         month: `${data._id.month}-${data._id.year}`,
         profit: parseFloat(data.totalProfit.toFixed(2)),

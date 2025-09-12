@@ -1,10 +1,19 @@
-import { ObjectId } from "mongodb";
-import { collections } from "../db.js";
-import { checkAndAlertLowStock } from "../utils/checkLowStock.js";
-// import { saveFruitStockReport } from "./stockController.js";
+import { ObjectId } from 'mongodb';
+import { collections } from '../db.js';
+import { checkAndAlertLowStock } from '../utils/checkLowStock.js';
+import { inventorySchema } from '../validationSchema.js';
+
 export const addInventory = async (req, res) => {
   try {
-    const { name, quantity, unit, purchasePrice, salePrice } = req.body;
+    const validationResult = inventorySchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        errors: validationResult.error.issues,
+      });
+    }
+
+    const { name, quantity, unit, purchasePrice, salePrice } = validationResult.data;
 
     const existingItem = await collections.inventory().findOne({ name });
 
@@ -15,22 +24,21 @@ export const addInventory = async (req, res) => {
           $inc: { quantity: Number(quantity) },
           $set: {
             unit,
-            purchasePrice: Number(purchasePrice), 
-            salePrice: Number(salePrice), 
+            purchasePrice: Number(purchasePrice),
+            salePrice: Number(salePrice),
             stockInDate: new Date(),
             updatedAt: new Date(),
           },
-        }
+        },
       );
-      // await saveFruitStockReport();
 
       await collections.stockIn().insertOne({
         itemId: existingItem._id,
         name,
         quantity: Number(quantity),
         unit,
-        purchasePrice: Number(purchasePrice), 
-        salePrice: Number(salePrice), 
+        purchasePrice: Number(purchasePrice),
+        salePrice: Number(salePrice),
         stockInDate: new Date(),
         createdAt: new Date(),
       });
@@ -42,38 +50,33 @@ export const addInventory = async (req, res) => {
       name,
       quantity: Number(quantity),
       unit,
-      purchasePrice: Number(purchasePrice), 
-      salePrice: Number(salePrice), 
+      purchasePrice: Number(purchasePrice),
+      salePrice: Number(salePrice),
       stockInDate: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    // await saveFruitStockReport();
-    const insertedItem = await collections
-      .inventory()
-      .findOne({ _id: newItem.insertedId });
+
+    const insertedItem = await collections.inventory().findOne({ _id: newItem.insertedId });
 
     await collections.stockIn().insertOne({
       itemId: newItem.insertedId,
       name,
       quantity: Number(quantity),
       unit,
-      purchasePrice: Number(purchasePrice), 
-      salePrice: Number(salePrice), 
+      purchasePrice: Number(purchasePrice),
+      salePrice: Number(salePrice),
       stockInDate: new Date(),
       createdAt: new Date(),
     });
 
     await checkAndAlertLowStock();
 
-    res
-      .status(201)
-      .json({ success: true, inserted: true, item: insertedItem });
+    res.status(201).json({ success: true, inserted: true, item: insertedItem });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 // get All
 export const getAllInventory = async (req, res) => {
@@ -93,7 +96,7 @@ export const getInventoryById = async (req, res) => {
       _id: new ObjectId(String(req.user.id)),
     });
     if (!item) {
-      res.status(404).json({ error: "item not found" });
+      res.status(404).json({ error: 'item not found' });
     }
     res.json(item);
   } catch (err) {
@@ -104,14 +107,13 @@ export const getInventoryById = async (req, res) => {
 export const updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    
+
     const { name, quantity, unit, purchasePrice, salePrice } = req.body;
 
     const updateData = {
       name,
       unit,
-      
+
       quantity: Number(quantity),
       purchasePrice: Number(purchasePrice),
       salePrice: Number(salePrice),
@@ -121,12 +123,12 @@ export const updateInventory = async (req, res) => {
     const update = await collections.inventory().updateOne(
       { _id: new ObjectId(String(id)) },
       {
-        $set: updateData, 
-      }
+        $set: updateData,
+      },
     );
 
     if (update.matchedCount === 0) {
-      return res.status(404).json({ error: "item not found" });
+      return res.status(404).json({ error: 'item not found' });
     }
     res.json({ success: true });
   } catch (err) {
@@ -142,10 +144,9 @@ export const deleteItem = async (req, res) => {
       _id: new ObjectId(String(id)),
     });
 
-    if (delItem.deletedCount === 0)
-      return res.status(404).json({ error: "Item not found" });
+    if (delItem.deletedCount === 0) return res.status(404).json({ error: 'Item not found' });
 
-    res.json({ success: true, message: "Item deleted successfully" });
+    res.json({ success: true, message: 'Item deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

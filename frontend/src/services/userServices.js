@@ -19,6 +19,9 @@ export async function getProfile() {
 
 export async function getAllUsers() {
   try {
+    const token = localStorage.getItem('token');
+    console.log('getAllUsers: Token value is:', token); // ✅ Yeh line add karein
+
     const res = await GET(`${API_BASE}/allusers`);
 
     if (!res || res.status < 200 || res.status >= 300) {
@@ -31,6 +34,8 @@ export async function getAllUsers() {
     throw new Error(err.message || 'Unable to fetch users');
   }
 }
+
+// ... baaki functions
 
 export async function deleteUser(userId) {
   try {

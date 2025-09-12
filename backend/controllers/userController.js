@@ -2,13 +2,12 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 import { collections } from '../db.js';
-import { signupSchema } from '../authValidator.js';
-import { loginSchema } from '../authValidator.js';
+import { userSchema, loginSchema, resetPasswordSchema, deleteUserSchema } from '../validationSchema.js'; // ✅ Naye schemas import kiye
 
 export const signup = async (req, res) => {
-  //  console.log('Received body:', req.body)
+  //  console.log('Received body:', req.body)
   try {
-    const validationResult = signupSchema.safeParse(req.body);
+    const validationResult = userSchema.safeParse(req.body);
 
     if (!validationResult.success) {
       return res.status(400).json({
@@ -24,7 +23,6 @@ export const signup = async (req, res) => {
 
     const existingUser = await collections.user().findOne({ email });
     if (existingUser) {
-      // ✅ Yahan json body add kiya gaya hai
       return res.status(400).json({ error: 'email is already registered' });
     }
 
@@ -43,7 +41,7 @@ export const signup = async (req, res) => {
       message: 'account is registered',
     });
   } catch (err) {
-    console.error('Signup Error:', err); 
+    console.error('Signup Error:', err);
     res.status(500).json({
       success: false,
       error: err.message || JSON.stringify(err) || 'Internal Server Error',
@@ -60,23 +58,22 @@ export const login = async (req, res) => {
 
     const user = await collections.user().findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ error: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    // 👇 JWT ke payload me user-agent include karo
     const payload = {
       id: user._id,
       role: user.role,
-      ua: req.headers["user-agent"], 
+      ua: req.headers['user-agent'],
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+      expiresIn: '1d',
     });
 
     res.json({
@@ -89,23 +86,6 @@ export const login = async (req, res) => {
         role: user.role,
       },
     });
-
-//     res.cookie("token", token, {
-//   httpOnly: true,
-//   secure: false,  
-//   sameSite: "Lax",
-//   maxAge: 24 * 60 * 60 * 1000, // 1 day
-// });
-
-// res.json({
-//   success: true,
-//   user: {
-//     id: user._id,
-//     name: user.name,
-//     email: user.email,
-//     role: user.role,
-//   },
-// });
   } catch (err) {
     if (err.errors) {
       return res.status(400).json({ success: false, errors: err.errors });
@@ -113,8 +93,6 @@ export const login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
 
 export const getProfile = async (req, res) => {
   try {
@@ -132,10 +110,15 @@ export const getProfile = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({ error: 'Old or new Password required' });
+    const validationResult = resetPasswordSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        errors: validationResult.error.issues,
+      });
     }
+    const { oldPassword, newPassword } = validationResult.data;
+
     const user = await collections.user().findOne({ _id: new ObjectId(String(req.user.id)) });
 
     if (!user) {
@@ -170,11 +153,15 @@ export const getAllUsers = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    const userId = req.params.id;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
+    const validationResult = deleteUserSchema.safeParse(req.params);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        errors: validationResult.error.issues,
+      });
     }
+
+    const { id: userId } = validationResult.data;
 
     const objectId = new ObjectId(String(userId));
 
